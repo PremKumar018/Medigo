@@ -1,0 +1,104 @@
+#!/bin/bash
+
+
+# Set database connection parameters
+DB_HOST="localhost"
+DB_USER="root"
+DB_PASS="Root@123"
+DB_NAME="medigo"
+
+#!/bin/bash
+
+# Function to display an error dialog
+display_error() {
+    zenity --error --text="$1" --title="Error"
+}
+
+# Function to display an information dialog
+display_info() {
+    zenity --info --text="$1" --title="Information"
+}
+
+# Function to prompt for seller input using Zenity
+prompt_input() {
+    zenity --entry --text="$1" --title="Input" --entry-text="$2"
+}
+
+# Function to perform the CREATE operation
+add_medicines() {
+    medicine_name=$(prompt_input "Enter medicines name:")
+    price=$(prompt_input "Enter price:")
+    manufacture_date=$(prompt_input "Enter menufacturing:")
+    expiry_date=$(prompt_input "Enter expiry date:")
+    description=$(prompt_input "Enter description:")
+    stock=$(prompt_input "Enter stocks:")
+
+    mysql -u $DB_USER -p$DB_PASS -h $DB_HOST -D $DB_NAME -e"INSERT INTO medicines (medicine_name, price, manufacture_date, expiry_date,description, stock) VALUES ('$medicine_name', '$price', '$manufacture_date', '$expiry_date','$description', '$stock');"
+
+
+
+    display_info "medicines added successfully!"
+}
+
+# Function to perform the READ operation
+
+
+# Function to perform the UPDATE operation
+update_medicnes() {
+    medicine_name=$(prompt_input "Enter medicines name:")
+    stock=$(prompt_input "Enter stocks:")
+
+    mysql -u $DB_USER -p$DB_PASS -h $DB_HOST -D $DB_NAME -e "UPDATE medicine SET stock = $new_stock WHERE medicine_name = '$medicine_name';"
+
+
+
+
+    display_info "medicine updated successfully!"
+}
+
+# Function to perform the DELETE operation
+delete_medicines() {
+    medicine_name=$(prompt_input "Enter medicines name:")
+
+    mysql -u $DB_USER -p$DB_PASS -h $DB_HOST -D $DB_NAME -e  "DELETE FROM medicines WHERE medicine_name = '$new_medicine_name';"
+
+    display_info " medicines deleted successfully!"
+}
+read_users_orders(){
+
+  orders=$(mysql -u $DB_USER -p$DB_PASS -h $DB_HOST -D $DB_NAME -e "SELECT * FROM medicines")
+
+  display_info "medicines:\n$medicines"
+}
+
+# Main menu
+choice=$(zenity --list --title="CRUD Operations" --text="Select an operation:" --radiolist \
+    --column="" --column="Operation" \
+    TRUE "Create" \
+    FALSE "Read" \
+    FALSE "Read user's order history" \
+    FALSE "Update" \
+    FALSE "Delete" \
+    --width=300 --height=250)
+
+case $choice in
+    "Create medicines ")
+        create_medicines
+        ;;
+    "Read medicines")
+        read_medicines
+        ;;
+    "Read user's order history")
+        read_users_orders
+        ;;       
+    "Update medicines")
+        update_medicines
+        ;;
+    "Delete medicines")
+        delete_medicines
+        ;;
+    *)
+        display_error "Invalid choice!"
+        ;;
+esac
+

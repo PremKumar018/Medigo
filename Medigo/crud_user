@@ -1,0 +1,123 @@
+#!/bin/bash
+
+
+# Set database connection parameters
+DB_HOST="localhost"
+DB_USER="root"
+DB_PASS="Root@123"
+DB_NAME="medigo"
+
+#!/bin/bash
+
+# Function to display an error dialog
+display_error() {
+    zenity --error --text="$1" --title="Error" --height=100 --width=300
+}
+
+# Function to display an information dialog
+display_info() {
+    zenity --info --text="$1" --title="Information" --height=100 --width=300
+}
+
+# Function to prompt for user input using Zenity
+prompt_input() {
+    zenity --entry --text="$1" --title="Input" --entry-text="$2" --height=100 --width=300
+}
+
+# Function to perform the CREATE operation
+create_user() {
+    user_name=$(prompt_input "Enter user name:")
+    gender=$(prompt_input "Enter gender:")
+    phone_number=$(prompt_input "Enter phone number:")
+    email=$(prompt_input "Enter email:")
+
+    mysql --defaults-file=/home/prem/.my.cnf -D $DB_NAME -e"INSERT INTO users (user_name, gender, phone_number, email) VALUES ('$user_name', '$gender', '$phone_number', '$email');"
+
+
+
+    display_info "User created successfully!"
+}
+
+# Function to perform the READ operation
+read_users() {
+    users=$(mysql --defaults-file=/home/prem/.my.cnf -D $DB_NAME -e "SELECT * FROM users")
+
+    display_info "Users:\n$users"
+}
+
+# Function to perform the UPDATE operation
+update_user() {
+    user_name=$(prompt_input "Enter user name:")
+    new_phone_number=$(prompt_input "Enter new phone number:")
+
+    mysql -u --defaults-file=/home/prem/.my.cnf -D $DB_NAME -e "UPDATE users SET phone_number = $new_phone_number WHERE user_name = '$user_name';"
+
+
+
+
+    display_info "User updated successfully!"
+}
+
+# Function to perform the DELETE operation
+delete_user() {
+    user_name=$(prompt_input "Enter user name:")
+
+    mysql -u --defaults-file=/home/prem/.my.cnf -D $DB_NAME -e  "DELETE FROM users WHERE user_name = '$user_name';"
+
+    display_info "User deleted successfully!"
+}
+read_users_cart(){
+
+  cart=$(mysql --defaults-file=/home/prem/.my.cnf -D $DB_NAME -e "SELECT * FROM cart")
+
+  display_info "User's cart:\n$cart"
+}
+read_users_orders(){
+
+  orders=$(mysql --defaults-file=/home/prem/.my.cnf -D $DB_NAME -e "SELECT * FROM order_history")
+
+  display_info "User's orders:\n$orders"
+}
+
+# Main menu
+choice=$(zenity --list --title="CRUD Operations" --text="Select an operation:" --radiolist \
+    --column="" --column="Operation" \
+    TRUE "Create" \
+    FALSE "Read" \
+    FALSE "Read user's cart" \
+    FALSE "Read user's order history" \
+    FALSE "Update" \
+    FALSE "Delete" \
+    --width=300 --height=250)
+
+case $choice in
+
+    "Create user")
+    
+        create_user ;;
+        
+    "Read user")
+    
+        read_users ;;
+        
+    "Read user's cart")
+    
+        read_users_cart ;;
+         
+    "Read user's order history")
+    
+        read_users_orders ;;
+              
+    "Update")
+    
+        update_user ;;
+        
+    "Delete")
+    
+        delete_user ;;
+        
+    *)
+        display_error "Invalid choice!"
+        ;;
+esac
+

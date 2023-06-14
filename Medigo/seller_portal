@@ -1,0 +1,119 @@
+#!/bin/bash
+
+
+# Set database connection parameters
+DB_HOST="localhost"
+DB_USER="root"
+DB_PASS="Root@123"
+DB_NAME="medigo"
+
+function logout() {
+
+    # Simply display a message to indicate the user has logged out
+    zenity --info --title "Logging out" --text "You have been Logged Out!" --height=200 --width=600
+    
+   source seller_login
+
+}
+
+function seller_detail() {
+zenity --info --title "Showing user detail" --text "qwertyuio" --height=200 --width=600
+    
+   source crud_seller
+}
+# Function to display an error dialog
+display_error() {
+    zenity --error --text="$1" --title="Error"
+}
+
+# Function to display an information dialog
+display_info() {
+    zenity --info --text="$1" --title="Information"
+}
+
+# Function to prompt for seller input using Zenity
+prompt_input() {
+    zenity --entry --text="$1" --title="Input" --entry-text="$2"
+}
+
+# Function to perform the CREATE operation
+add_medicines() {
+
+    form=$(zenity --forms --title="ADD MEDICINE" --text="Please enter your information:" \
+        --add-entry="Enter the Medicine Name" \
+        --add-entry="Select the Medicine Price" \
+        --add-calendar=" Enter your Manufacture Date" \
+        --add-calendar="Enter your Expiry Date" \
+        --add-password="Enter the no of Stock" --combo-values="10|20|30|40"--height=400 --width=600)
+        
+    # Check if the user clicked the "Cancel" button
+	if [ $? -ne 0 ]; then
+  	    zenity --error --title="Form Cancelled" --text="Registeration failed. Please try again" --height=100 --width=300
+  	    main
+	fi
+        
+  med_name=$(echo "$selected_med" | awk '{print $1}')
+  med_price=$(echo "$selected_med" | awk '{print $2}')
+  med_mnf=$(echo "$selected_med" | awk '{print $3}')
+  med_expiry=$(echo "$selected_med" | awk '{print $4}')
+  med_stock=$(echo "$selected_med" | awk '{print $5}')
+  
+        
+    mysql --defaults-file=/home/prem/.my.cnf -D $DB_NAME -e"INSERT INTO medicines (medicine_name, price, manufacture_date, expiry_date, stock) VALUES ('$med_name', '$med_price', '$med_mnf', '$med_expiry', '$med_stock');"
+
+
+    display_info "Medicines added successfully!"
+}
+update_medicnes() {
+
+    medicine_name=$(prompt_input "Enter medicines name:")
+    stock=$(prompt_input "Enter stocks:")
+
+    mysql --defaults-file=/home/prem/.my.cnf -D $DB_NAME -e "UPDATE medicine SET stock = $stock WHERE medicine_name = '$medicine_name';"
+
+
+
+
+    display_info "medicine updated successfully!"
+}
+
+delete_medicines() {
+    medicine_name=$(prompt_input "Enter medicines name:")
+
+    mysql --defaults-file=/home/prem/.my.cnf -D $DB_NAME -e  "DELETE FROM medicines WHERE medicine_name = '$new_medicine_name';"
+
+    display_info " medicines deleted successfully!"
+}
+read_users_orders(){
+
+  orders=$(mysql --defaults-file=/home/prem/.my.cnf -D $DB_NAME -e "SELECT * FROM order_history")
+
+  display_info "medicines:\n$medicines"
+}
+
+
+
+function seller_portal() {
+
+choice=$(zenity --list --title="Welcome to MEDIGO" --text="seller Portal Functions" --column="Portals" ADD_MEDICINES REMOVE_MEDICINES UPDATE_MEDICINES USER_ORDER_HISTORY LOG_OUT --width=600 --height=400)
+
+case $choice in
+
+    ADD_MEDICINES) add_medicines ;;
+
+    REMOVE_MEDICINES) delete_medicines ;;
+    
+    UPDATE_MEDICINES) update_medicnes ;;
+    
+    USER_ORDER_HISTORY) read_users_orders ;;
+
+    LOG_OUT) logout ;;
+
+    *) 
+	 zenity --info --title="Welcome to MEDIGO" --error "Invalid Choice. Please Try Again!" --width=100 --height=100
+
+esac
+
+}
+seller_portal
+
